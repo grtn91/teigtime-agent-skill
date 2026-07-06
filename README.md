@@ -24,14 +24,14 @@ Each skill has its own `SKILL.md` and a self-contained `scripts/calculate.py`
 
 ```
 /plugin marketplace add grtn91/teigtime-agent-skill
-/plugin install dough-recipe
+/plugin install dough-recipe@teigtime-agent-skill
 ```
 
 Or, for local development, from a clone of this repo:
 
 ```
 /plugin marketplace add .
-/plugin install dough-recipe
+/plugin install dough-recipe@teigtime-agent-skill
 ```
 
 ## Example
