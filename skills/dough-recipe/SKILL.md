@@ -36,6 +36,29 @@ change one.
   exactly this and should get exactly one follow-up question.
 - **Portion count** (number of balls/loaves) — only ask if truly absent (e.g.
   "make me some dough" with no quantity at all).
+- **Salt level** — offer a quick pick: none / low / normal / high (or let the
+  user give an exact percent or gram amount instead). Maps to:
+
+  | Level | Salt % |
+  |---|---|
+  | none | 0% |
+  | low | 1.2% |
+  | normal | purpose default (see `calculate-bakers-percentage`'s SKILL.md) |
+  | high | 3.0% |
+
+- **Oil/fat level** — same quick-pick pattern: none / low / normal / high (or
+  an exact percent/gram amount). Maps to:
+
+  | Level | Fat % |
+  |---|---|
+  | none | 0% |
+  | low | 1.0% |
+  | normal | purpose default |
+  | high | 5.0% |
+
+- **Predough** — ask directly: none, or poolish/biga for more flavor and a
+  longer ferment. If the user wants one but doesn't care which, default to
+  poolish (simpler, no special flour needed).
 - **Ambient/dough temperature — but only once a fermentation time is in play**
   (the user gave a fermentation duration, a ready-by time, or predough
   timing). Every 5°C roughly doubles or halves the yeast needed for the same
@@ -44,9 +67,12 @@ change one.
   long/forgiving ferment and gave no timing at all, skip this question —
   temperature only matters once a duration is driving the calculation.
 
+Ask all of these together as one compact, multiple-choice-style question —
+don't spread them across separate follow-up turns.
+
 **Optional — default and state, don't block:**
 - Portion size (small/normal/large, or an explicit gram weight) → defaults to normal.
-- Hydration / salt / sugar / fat % → purpose defaults (see `calculate-bakers-percentage`'s SKILL.md).
+- Hydration / sugar % → purpose defaults (see `calculate-bakers-percentage`'s SKILL.md).
 - Yeast type (fresh/dry/instant) → defaults to fresh.
 - Fermentation style (neapolitan/roman/newyork/direct) → defaults to
   neapolitan (long, forgiving), unless the user names a specific style
@@ -58,8 +84,6 @@ change one.
   already-short explicit time double-counts speed (verified: 4h at 21°C +
   direct mode gives 5.9% yeast, outside fresh yeast's realistic 3% ceiling —
   use neapolitan as the baseline multiplier unless the user names a style).
-- Predough (none/poolish/biga) → defaults to none, unless the user asks for
-  more flavor or a longer ferment, or the request conventionally implies one.
 - Ready-by time → only used if the user gives one. Never invent a start time.
 
 ## Procedure
@@ -69,36 +93,46 @@ change one.
    temperature, include the temperature question in that same combined ask
    rather than a separate follow-up.
 2. Resolve every optional field to a default unless the user already gave it.
-3. Run `calculate-bakers-percentage/scripts/calculate.py` with
+   Convert salt/oil levels to percent via the tables above.
+3. **If the user gave salt or oil as an absolute gram amount** (not a percent
+   or level), resolve it in two passes since grams-to-percent depends on
+   flour weight, which isn't known yet: first run
+   `calculate-bakers-percentage` with a placeholder (e.g. the purpose
+   default) to get an approximate `flour_weight_g`, compute
+   `percent = grams / flour_weight_g * 100`, then re-run with that resolved
+   percent for the real numbers. Salt/fat are small percentages, so this
+   converges in one extra pass — no need to iterate further.
+4. Run `calculate-bakers-percentage/scripts/calculate.py` with
    `--purpose`/`--balls`/`--size or --weight`/`--hydration`/`--salt`/`--sugar`/`--fat`
    (and `--manual-yeast-percent` **only** if the user gave a fixed % and there
    is no predough and no fermentation time/temp — otherwise omit it and let
-   step 4/5 handle yeast). Read its `flour_weight_g` from the output.
-4. If a predough was requested, run
-   `calculate-predough/scripts/calculate.py --flour-weight <from step 3> --hydration <recipe hydration>`
+   the next steps handle yeast). Read its `flour_weight_g` from the output.
+5. If a predough was requested, run
+   `calculate-predough/scripts/calculate.py --flour-weight <from step 4> --hydration <recipe hydration>`
    plus the predough/main-dough fermentation flags. Its output already
-   includes the correctly split flour/water/yeast for both parts — skip step 5.
-5. Otherwise, if fermentation time/temp or a fixed yeast % was given, run
-   `calculate-yeast/scripts/calculate.py --flour-weight <from step 3>` with
+   includes the correctly split flour/water/yeast for both parts — skip step 6.
+6. Otherwise, if fermentation time/temp or a fixed yeast % was given, run
+   `calculate-yeast/scripts/calculate.py --flour-weight <from step 4>` with
    the relevant flags to get the yeast weight.
-6. If the user gave a ready-by time, sum the recipe's step durations in
+7. If the user gave a ready-by time, sum the recipe's step durations in
    minutes and run `calculate-fermentation-schedule/scripts/calculate.py
    --total-minutes <sum> --ready-at <HH:MM>` to get a recommended start time.
-7. Present a single combined ingredient list in grams, plus any notes from
-   steps 4-6 (e.g. yeast reduction, recommended start time). Mention which
+8. Present a single combined ingredient list in grams, plus any notes from
+   steps 5-7 (e.g. yeast reduction, recommended start time). Mention which
    defaults you assumed so the user can correct any of them.
 
 ## Example
 
-Request: "I need a dough recipe for 4 people, normal size, with a poolish,
-ready to bake at 20:00."
+Request: "I need a dough recipe for 4 people, normal size, ready to bake at 20:00."
 
-- Ask: "What are you making — pizza, bread, focaccia, or something else?"
-- User: "Pizza."
-- Step 3: `calculate-bakers-percentage --purpose pizza --balls 4 --size normal`
-  → flour_weight_g ≈ 599.7
-- Step 4: `calculate-predough --flour-weight 599.7 --hydration 63.5 --predough-type poolish --predough-hours 12 --main-ferment-hours 18 --main-ferment-temp 20`
+- Ask (one combined question): "What are you making — pizza, bread, focaccia,
+  or something else? And: salt (none/low/normal/high), oil (none/low/normal/high),
+  a predough (none/poolish/biga), and what temperature it'll rise at?"
+- User: "Pizza, normal salt, low oil, poolish, 20°C."
+- Step 4: `calculate-bakers-percentage --purpose pizza --balls 4 --size normal --fat 1.0`
+  (salt left at purpose default since "normal" was picked) → flour_weight_g ≈ 599.7
+- Step 5: `calculate-predough --flour-weight 599.7 --hydration 63.5 --predough-type poolish --predough-hours 12 --main-ferment-hours 18 --main-ferment-temp 20`
   → predough + main-dough flour/water/yeast
-- Step 6: sum step durations, run `calculate-fermentation-schedule --ready-at 20:00`
+- Step 7: sum step durations, run `calculate-fermentation-schedule --ready-at 20:00`
 - Present: ingredient list + "start by ~14:00 to be ready at 20:00" + the
   poolish yeast-reduction note.

@@ -3,6 +3,19 @@
 All notable changes to this project are documented in this file. Format
 follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.4.0] - 2026-07-06
+
+### Changed
+
+- `dough-recipe` orchestrator now asks upfront for salt level, oil/fat level,
+  and predough choice (previously silently defaulted/inferred), alongside
+  purpose/portions/temperature, as one combined question. Salt and oil each
+  accept a quick none/low/normal/high pick (mapped to fixed percentages —
+  see `calculate-bakers-percentage`'s SKILL.md) or an exact percent/gram
+  amount. Documented the two-pass grams-to-percent conversion needed when
+  the user gives an absolute gram amount instead of a percent, since that
+  conversion depends on flour weight, which depends on the percentages.
+
 ## [0.3.0] - 2026-07-06
 
 ### Changed

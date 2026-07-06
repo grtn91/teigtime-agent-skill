@@ -9,7 +9,7 @@
       "name": "dough-recipe",
       "source": "./",
       "description": "Computes dough recipes (flour/water/yeast/salt/sugar/fat weights, optional poolish/biga predough, ready-by-time scheduling) from a natural-language request.",
-      "version": "0.3.0",
+      "version": "0.4.0",
       "license": "MIT",
       "skills": [
         "./skills/dough-recipe",

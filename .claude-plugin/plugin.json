@@ -1,6 +1,6 @@
 {
   "name": "dough-recipe",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Computes dough recipes from natural-language requests using baker's percentages, yeast %, and predough (poolish/biga) math.",
   "author": {
     "name": "Maik Groten"

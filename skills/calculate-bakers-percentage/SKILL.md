@@ -46,6 +46,23 @@ Small/normal/large sizing: small ≈ −20% of normal, large ≈ +20%, rounded
 (e.g. pizza 200/250/300g). Pass `--weight` to override with an explicit gram
 value instead.
 
+If the user describes salt or oil/fat as a level rather than a percent, map
+it to `--salt`/`--fat` like this (independent of purpose, except "normal"
+which still means the purpose default above):
+
+| Level | Salt % | Fat % |
+|---|---|---|
+| none | 0% | 0% |
+| low | 1.2% | 1.0% |
+| normal | purpose default | purpose default |
+| high | 3.0% | 5.0% |
+
+If the user gives an absolute gram amount instead of a percent/level, this
+script only accepts percent — convert first: run once with a placeholder to
+get an approximate `flour_weight_g`, compute `percent = grams / flour_weight_g * 100`,
+then re-run with that percent for the final numbers (salt/fat are small
+percentages, so one extra pass is enough to converge).
+
 ## CLI reference
 
 ```
