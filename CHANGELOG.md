@@ -3,6 +3,21 @@
 All notable changes to this project are documented in this file. Format
 follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.3.0] - 2026-07-06
+
+### Changed
+
+- `dough-recipe` orchestrator now asks for the ambient/dough temperature
+  whenever a fermentation time is in play (duration, ready-by time, or
+  predough timing), instead of silently assuming room temperature — every
+  5°C roughly doubles or halves the required yeast %.
+- Refined the fermentation-style default: "direct"/same-day style is now only
+  picked when the user names a style explicitly, not inferred from urgency
+  language alone. Found via live use that stacking "direct" mode on an
+  already-short explicit fermentation time double-counts speed (4h at 21°C +
+  direct mode produced 5.9% yeast, outside fresh yeast's realistic 3%
+  ceiling); neapolitan is now the baseline unless a style is named.
+
 ## [0.2.0] - 2026-07-06
 
 ### Changed

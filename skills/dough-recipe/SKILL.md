@@ -36,14 +36,28 @@ change one.
   exactly this and should get exactly one follow-up question.
 - **Portion count** (number of balls/loaves) — only ask if truly absent (e.g.
   "make me some dough" with no quantity at all).
+- **Ambient/dough temperature — but only once a fermentation time is in play**
+  (the user gave a fermentation duration, a ready-by time, or predough
+  timing). Every 5°C roughly doubles or halves the yeast needed for the same
+  time, so don't silently assume room temperature — ask, e.g. "what's the
+  temperature where it'll be rising?" If the user is fine with the default
+  long/forgiving ferment and gave no timing at all, skip this question —
+  temperature only matters once a duration is driving the calculation.
 
 **Optional — default and state, don't block:**
 - Portion size (small/normal/large, or an explicit gram weight) → defaults to normal.
 - Hydration / salt / sugar / fat % → purpose defaults (see `calculate-bakers-percentage`'s SKILL.md).
 - Yeast type (fresh/dry/instant) → defaults to fresh.
-- Fermentation style (neapolitan/roman/newyork/direct) or an explicit
-  time+temperature → defaults to neapolitan (long, forgiving), unless the
-  user's phrasing implies same-day ("I need it tonight" → direct).
+- Fermentation style (neapolitan/roman/newyork/direct) → defaults to
+  neapolitan (long, forgiving), unless the user names a specific style
+  explicitly (e.g. "New York style", "direct method"). Don't infer a faster
+  style from urgency language alone ("ready in 4 hours" is a time, not a
+  style pick) — when the user already gives an explicit fermentation time,
+  that time alone should drive the calculation via `calculate-yeast`'s
+  `--ferment-hours`; stacking a "direct" style multiplier on top of an
+  already-short explicit time double-counts speed (verified: 4h at 21°C +
+  direct mode gives 5.9% yeast, outside fresh yeast's realistic 3% ceiling —
+  use neapolitan as the baseline multiplier unless the user names a style).
 - Predough (none/poolish/biga) → defaults to none, unless the user asks for
   more flavor or a longer ferment, or the request conventionally implies one.
 - Ready-by time → only used if the user gives one. Never invent a start time.
@@ -51,7 +65,9 @@ change one.
 ## Procedure
 
 1. Parse the request for the mandatory fields above; ask one combined
-   question if any are missing.
+   question if any are missing. If a fermentation time was given but no
+   temperature, include the temperature question in that same combined ask
+   rather than a separate follow-up.
 2. Resolve every optional field to a default unless the user already gave it.
 3. Run `calculate-bakers-percentage/scripts/calculate.py` with
    `--purpose`/`--balls`/`--size or --weight`/`--hydration`/`--salt`/`--sugar`/`--fat`
