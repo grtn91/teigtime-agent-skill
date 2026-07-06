@@ -1,0 +1,23 @@
+{
+  "name": "teigtime-agent-skill",
+  "description": "Dough recipe calculation skills for Claude — baker's percentages, yeast, and predough math ported from the TeigTime app.",
+  "owner": {
+    "name": "Maik Groten"
+  },
+  "plugins": [
+    {
+      "name": "dough-recipe",
+      "source": "./",
+      "description": "Computes dough recipes (flour/water/yeast/salt/sugar/fat weights, optional poolish/biga predough, ready-by-time scheduling) from a natural-language request.",
+      "version": "0.2.0",
+      "license": "MIT",
+      "skills": [
+        "./skills/dough-recipe",
+        "./skills/calculate-bakers-percentage",
+        "./skills/calculate-yeast",
+        "./skills/calculate-predough",
+        "./skills/calculate-fermentation-schedule"
+      ]
+    }
+  ]
+}
