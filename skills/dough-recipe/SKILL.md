@@ -3,22 +3,22 @@ name: dough-recipe
 description: >
   Computes dough recipes (pizza, bread, focaccia, bagels, ...) as exact gram
   weights by orchestrating the calculate-bakers-percentage, calculate-yeast,
-  calculate-predough, and calculate-fermentation-schedule skills. Use when the
-  user asks for a dough recipe, pizza dough, or bread dough, or gives a
-  portion count (e.g. "4 people", "6 balls") and wants ingredient weights.
-  Asks brief follow-up questions for anything required but missing, states
-  sensible defaults for everything else.
+  calculate-predough, calculate-fermentation-schedule, and step-reminders
+  skills. Use when the user asks for a dough recipe, pizza dough, or bread
+  dough, or gives a portion count (e.g. "4 people", "6 balls") and wants
+  ingredient weights. Asks brief follow-up questions for anything required
+  but missing, states sensible defaults for everything else.
 metadata:
-  related_skills: calculate-bakers-percentage, calculate-yeast, calculate-predough, calculate-fermentation-schedule
+  related_skills: calculate-bakers-percentage, calculate-yeast, calculate-predough, calculate-fermentation-schedule, step-reminders
 license: MIT
 ---
 
 # Dough recipe (orchestrator)
 
 Turns a natural-language dough request into exact gram weights by running
-three or four sibling skills' scripts in sequence. This skill holds no
-calculation logic of its own — it only resolves the conversation (what does
-the user want, what are the defaults) and wires the sub-skills together.
+sibling skills' scripts in sequence. This skill holds no calculation logic
+of its own — it only resolves the conversation (what does the user want,
+what are the defaults) and wires the sub-skills together.
 
 Each sub-skill is also independently triggerable on its own (e.g. a lone
 "what yeast % for an 18 hour ferment at 20°C?" activates just `calculate-yeast`).
@@ -120,6 +120,21 @@ don't spread them across separate follow-up turns.
 8. Present a single combined ingredient list in grams, plus any notes from
    steps 5-7 (e.g. yeast reduction, recommended start time). Mention which
    defaults you assumed so the user can correct any of them.
+9. Ask (as a separate, non-blocking question, now that the recipe itself is
+   already fully presented): "Want a step-by-step timeline, and reminders
+   when each step is done?" If no, stop here.
+10. If yes: build the ordered step list — predough ferment (if any), main
+    ferment, plus mix/divide-shape/bake from `step-reminders`'s typical-duration
+    table — and resolve the start time (the `recommended_start` from step 7 if
+    a ready-by time was given, otherwise real `now` via
+    `step-reminders/scripts/now.py`). Run `step-reminders/scripts/timeline.py`
+    with that start time and step list, and present the resulting timeline.
+11. Then separately ask whether to set up **active** reminders (not implied
+    by step 9's yes alone) — if so, follow `step-reminders`'s two-tier
+    behavior: only schedule steps ≥ 15 minutes, confirm before creating each
+    scheduled run via the `schedule` skill/`CronCreate`, and fall back to
+    "reminders aren't available here, but here's your timeline" if the host
+    doesn't support it.
 
 ## Example
 
@@ -136,3 +151,8 @@ Request: "I need a dough recipe for 4 people, normal size, ready to bake at 20:0
 - Step 7: sum step durations, run `calculate-fermentation-schedule --ready-at 20:00`
 - Present: ingredient list + "start by ~14:00 to be ready at 20:00" + the
   poolish yeast-reduction note.
+- Step 9: ask "Want a timeline and reminders?" User: "Yes, timeline please."
+- Step 10: `step-reminders/scripts/timeline.py --start-iso 2026-07-07T14:00:00 --step "Predough:720" --step "Mix:15" --step "Bulk ferment:1080" --step "Shape:20" --step "Bake:15"`
+  → presented as a clock-time schedule.
+- Step 11: ask about active reminders separately; only proceed with `/schedule`
+  if the user says yes and confirms, and only for steps ≥ 15 minutes.

@@ -3,6 +3,23 @@
 All notable changes to this project are documented in this file. Format
 follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.5.0] - 2026-07-07
+
+### Added
+
+- New `step-reminders` sub-skill: builds a step-by-step clock-time timeline
+  (`scripts/timeline.py`, forward-scheduling counterpart to
+  `calculate-fermentation-schedule`'s backward scheduling) from a start time
+  and ordered step durations, always anchored to the real system clock
+  (`scripts/now.py`) rather than the model's guess of "now". Optionally sets
+  up active reminders via the host's `/schedule` skill (`CronCreate`) for
+  steps ≥ 15 minutes, with explicit user confirmation before creating each
+  scheduled run, and a graceful static-timeline-only fallback when the host
+  doesn't support scheduling.
+- `dough-recipe` orchestrator now asks, after presenting the recipe, whether
+  the user wants a timeline and reminders (two separate asks: timeline first,
+  active reminders as its own follow-up).
+
 ## [0.4.0] - 2026-07-06
 
 ### Changed

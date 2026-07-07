@@ -8,7 +8,7 @@ iOS app.
 
 ## Structure
 
-One orchestrator skill plus four standalone calculation skills, each
+One orchestrator skill plus five standalone calculation skills, each
 independently triggerable:
 
 - `skills/dough-recipe` — orchestrator: runs the Q&A, then chains the skills below.
@@ -16,9 +16,11 @@ independently triggerable:
 - `skills/calculate-yeast` — time/temperature (or manual) → yeast % and weight.
 - `skills/calculate-predough` — poolish/biga flour/water split + yeast, with main-dough reduction.
 - `skills/calculate-fermentation-schedule` — backward-schedules a start time from a ready-by time.
+- `skills/step-reminders` — forward step-by-step timeline from a start time, with optional
+  scheduled reminders via the host's `/schedule` skill.
 
-Each skill has its own `SKILL.md` and a self-contained `scripts/calculate.py`
-(stdlib-only Python, run `--selftest` on any of them to verify the math).
+Each skill has its own `SKILL.md` and self-contained `scripts/` (stdlib-only
+Python, run `--selftest` on any script with real logic to verify the math).
 
 ## Install
 
